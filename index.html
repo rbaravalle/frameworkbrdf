@@ -82,7 +82,7 @@
                         ? pow(max(dot(reflectionDirection, eyeDirection), 0.0), uMaterialShininess)
                         : pow(max(NH, 0.0), uMaterialShininess);
 
-                
+                // cook-torrance                
                 if(uBrdf == 2) {
                     float geometric = min(1.0, (2.0*NH*NE) / EH);
 
