@@ -82,7 +82,7 @@
                         ? pow(max(dot(reflectionDirection, eyeDirection), 0.0), uMaterialShininess)
                         : pow(max(NH, 0.0), uMaterialShininess);
 
-                // cook-torrance                
+                // cook-torranc                
                 if(uBrdf == 2) {
                     float geometric = min(1.0, (2.0*NH*NE) / EH);
 
@@ -162,16 +162,17 @@
 
 </head>
 
-<body onload="webGLStart();">
+<body style="background-color: black;" onload="webGLStart();">
 
 
     <div align="center">
-    <canvas id="lesson14-canvas" style="border: " width="500" height="500"></canvas>
+    <canvas id="lesson14-canvas" style="float: left;" width="500" height="500"></canvas>
     </div>
 
     <div id="loadingtext">Loading world...</div>
     <br/>
 
+    <div style="background-color:gray;" id="container">
     <table id="brdfseltable" style="border: 0; padding: 10px;">
         <tr>
             <td><b>Use BRDF:</b>
@@ -196,13 +197,10 @@
     </select>
     <br/>
 
-
-    <h2>Material:</h2>
-
     <table style="border: 0; padding: 10px;">
         <tr>
-            <td><b>Shininess:</b></td>
-            <td><input type="text" id="shininess" value="32.0" /></td>
+            <!--<td><b>Shininess:</b></td>-->
+            <td><input type="text" hidden id="shininess" value="32.0" /></td>
         </tr>
     </table>
 
@@ -212,21 +210,21 @@
     <table style="border: 0; padding: 10px;">
         <tr>
             <td><b>Location:</b>
-            <td>X: <input type="text" id="lightPositionX" value="-10.0" />
-            <td>Y: <input type="text" id="lightPositionY" value="4.0" />
-            <td>Z: <input type="text" id="lightPositionZ" value="-20.0" />
+            <td>X: <input type="text" size=5 id="lightPositionX" value="-10.0" />
+            <td>Y: <input type="text" size=5 id="lightPositionY" value="4.0" />
+            <td>Z: <input type="text" size=5 id="lightPositionZ" value="-20.0" />
         </tr>
         <tr>
             <td><b>Specular colour:</b>
-            <td>R: <input type="text" id="specularR" value="0.8" />
-            <td>G: <input type="text" id="specularG" value="0.8" />
-            <td>B: <input type="text" id="specularB" value="0.8" />
+            <td>R: <input type="text" size=5 id="specularR" value="0.8" />
+            <td>G: <input type="text" size=5 id="specularG" value="0.8" />
+            <td>B: <input type="text" size=5 id="specularB" value="0.8" />
         </tr>
         <tr>
             <td><b>Diffuse colour:</b>
-            <td>R: <input type="text" id="diffuseR" value="0.8" />
-            <td>G: <input type="text" id="diffuseG" value="0.8" />
-            <td>B: <input type="text" id="diffuseB" value="0.8" />
+            <td>R: <input type="text" size=5 id="diffuseR" value="0.8" />
+            <td>G: <input type="text" size=5 id="diffuseG" value="0.8" />
+            <td>B: <input type="text" size=5 id="diffuseB" value="0.8" />
         </tr>
     </table>
 
@@ -236,15 +234,15 @@
     <table style="border: 0; padding: 10px;">
         <tr>
             <td><b>Colour:</b>
-            <td>R: <input type="text" id="ambientR" value="0.2" />
-            <td>G: <input type="text" id="ambientG" value="0.2" />
-            <td>B: <input type="text" id="ambientB" value="0.2" />
+            <td>R: <input type="text" size=5 id="ambientR" value="0.2" />
+            <td>G: <input type="text" size=5 id="ambientG" value="0.2" />
+            <td>B: <input type="text" size=5 id="ambientB" value="0.2" />
         </tr>
     </table>
     <br/>
 
-    Galvanized texture courtesy of <a href="http://www.arroway-textures.com/">Arroway Textures</a>.<br/>
-    Earth texture courtesy of <a href="http://www.esa.int/esaEO/SEMGSY2IU7E_index_0.html">the European Space Agency/Envisat</a>.<br/><br/>
+    <br/><br/>
+    </div>
 
 </body>
 
