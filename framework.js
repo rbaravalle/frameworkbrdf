@@ -201,14 +201,14 @@ function loadscene() {
       onSuccess: readCOLLADA        
     });
 
-    var request = new XMLHttpRequest();
+    /*var request = new XMLHttpRequest();
     request.open("GET", "Teapot.json");
     request.onreadystatechange = function () {
         if (request.readyState == 4) {
             handleLoadedScene(JSON.parse(request.responseText));
         }
     }
-    request.send();
+    request.send();*/
 
 }
 
@@ -228,7 +228,9 @@ function readCOLLADA(xml) {
             var idVertex; // id object in the xml which contains the normals
             var idNormal; // id object in the xml which contains the normals
             var idTexcoord; // id object in the xml which contains the texcoords
+            var idPosition; // id object in the xml which contains the positions
             var normals, positions, texcoords; // strings containing the data
+            var cnormals, cpositions, ctexcoords, ctriangs; // count parameters for each type of data
           
             var inputs = triangles.getElementsByTagName('input');
             
@@ -243,31 +245,83 @@ function readCOLLADA(xml) {
                 if(semantic == 'TEXCOORD') { idTexcoord = sourc.replace(/#/g, ''); }
 
             }
+           
+            var vertices = meshes[m].getElementsByTagName('vertices')[0];
+
+            // we are interested in vertex's positions
+            // so we search in vertex's attributes looking for positions
+            var attr = vertices.getElementsByTagName('input');
+
+            for(var a = 0; a < attr.length; a++) {
+                if(attr[a].getAttribute('semantic') == 'POSITION') { 
+                    idPosition = attr[a].getAttribute('source').replace(/#/g, '');
+                    break;
+                }
+            }
+
 
             var sources = meshes[m].getElementsByTagName('source');
-            
 
             // cycle through each source
             for(var s = 0; s < sources.length; s++) {
                 if(sources[s].getAttribute('id') == idNormal) {
                     var array = sources[s].next();
-                    var count = array.getAttribute('count');
-                    normals = array.innerHTML.replace(/ /g,',');
+                    cnormals = array.getAttribute('count');
+                    normals = array.innerHTML.split(' ');
                  }
                 else if(sources[s].getAttribute('id') == idTexcoord) {
                     var array = sources[s].next();
-                    var count = array.getAttribute('count');
-                    texcoords = array.innerHTML.replace(/ /g,',');
-                    alert('texc: ' + texcoords);
+                    ctexcoords = array.getAttribute('count');
+                    texcoords = array.innerHTML.split(' ');
+                    //alert('texc: ' + texcoords);
+                }
+                else if(sources[s].getAttribute('id') == idPosition) {
+                    var array = sources[s].next();
+                    cpositions = array.getAttribute('count');
+                    positions = array.innerHTML.split(' ');
+                    //alert('positions: ' + positions);
                 }
             }
             
-            var aNorm = $(idNormal).getElementsByTagName('float_array')[0];
+            var aNorm = triangles.getElementsByTagName('p')[0];
+            var ctriangles = triangles.getAttribute('count');
 
-            var cant = aNorm.getAttribute('count');
-            var data = aNorm.innerHTML; alert(data);
+            //var cant = aNorm.getAttribute('count');
+            var triangs = aNorm.innerHTML.split(' ');
+            //alert('triangs: '+triangs);
 
-            var sceneData = {'vertexNormals': data};
+            var fpositions = '', fnormals = '', ftexcoords = '', findexs = '';
+            // final variables
+            // we loop over vertices defined by (vertex,normal,texcoord) in 'triangs'
+            for(var i = 0; i < ctriangles; i+=3) {
+                findexs += triangs[i] + ' ';
+
+                var iposition = triangs[i];
+                fpositions += positions[iposition*3] + ' ' 
+                            + positions[iposition*3+1] + ' ' 
+                            + positions[iposition*3+2] + ' ' ;
+
+                var inormal = triangs[i+1];
+                fnormals += normals[inormal*3] + ' ' 
+                          + normals[inormal*3+1] + ' ' 
+                          + normals[inormal*3+2] + ' ' ;
+
+                var itcoord = triangs[i+2];
+                ftexcoords += texcoords[itcoord*3] + ' '
+                            + texcoords[itcoord*3+1] + ' '
+                            + texcoords[itcoord*3+2] + ' ' ;
+            }
+
+            findexs = findexs.replace(/ /g, ',');
+            fpositions = fpositions.replace(/ /g, ',');
+            fnormals = fnormals.replace(/ /g, ',');
+            ftexcoords = ftexcoords.replace(/ /g, ',');
+
+            var sceneData = {'vertexNormals': fnormals, 'vertexPositions': fpositions, "vertexTextureCoords" : ftexcoords, 'indices': findexs};
+
+            alert(sceneData.vertexPositions);
+
+            handleLoadedScene(sceneData);
             
         }
     }
