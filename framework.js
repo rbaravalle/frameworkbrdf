@@ -194,6 +194,9 @@ function handleLoadedTeapot(teapotData) {
 
 
 function loadTeapot() {
+    alert("entra");
+    //var myAjax = new Ajax.Request( 'duck.dae', { method: 'get', onSuccess: parseXml }); 
+
     var request = new XMLHttpRequest();
     request.open("GET", "Teapot.json");
     request.onreadystatechange = function () {
@@ -202,6 +205,13 @@ function loadTeapot() {
         }
     }
     request.send();
+
+}
+
+function parseXml(xmlDoc) {
+  var root = xmlDoc.documentElement;
+  //var pri = root.getElementsByTagName('COLLADAf').length;
+  alert(root);
 }
 
 
@@ -256,7 +266,7 @@ function drawScene() {
     var texture = document.getElementById("texture").value;
     gl.uniform1i(shaderProgram.useTexturesUniform, texture != "none");
 
-    var brdf = document.getElementById("brdfsel").value;
+    var brdf = $("brdfsel").value;
     gl.uniform1i(shaderProgram.uBrdfUniform, brdf);
 
     mat4.identity(mvMatrix);
@@ -297,7 +307,7 @@ function animate() {
     if (lastTime != 0) {
         var elapsed = timeNow - lastTime;
 
-        teapotAngle += 0.01 * elapsed;
+        teapotAngle += 0.04 * elapsed;
     }
     lastTime = timeNow;
 }
