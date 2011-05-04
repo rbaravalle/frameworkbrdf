@@ -159,70 +159,128 @@ function degToRad(degrees) {
 }
 
 
-var teapotVertexPositionBuffer;
-var teapotVertexNormalBuffer;
-var teapotVertexTextureCoordBuffer;
-var teapotVertexIndexBuffer;
+var sceneVertexPositionBuffer;
+var sceneVertexNormalBuffer;
+var sceneVertexTextureCoordBuffer;
+var sceneVertexIndexBuffer;
 
-function handleLoadedTeapot(teapotData) {
-    teapotVertexNormalBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, teapotVertexNormalBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(teapotData.vertexNormals), gl.STATIC_DRAW);
-    teapotVertexNormalBuffer.itemSize = 3;
-    teapotVertexNormalBuffer.numItems = teapotData.vertexNormals.length / 3;
 
-    teapotVertexTextureCoordBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, teapotVertexTextureCoordBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(teapotData.vertexTextureCoords), gl.STATIC_DRAW);
-    teapotVertexTextureCoordBuffer.itemSize = 2;
-    teapotVertexTextureCoordBuffer.numItems = teapotData.vertexTextureCoords.length / 2;
+function handleLoadedScene(sceneData) {
+    sceneVertexNormalBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, sceneVertexNormalBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(sceneData.vertexNormals), gl.STATIC_DRAW);
+    sceneVertexNormalBuffer.itemSize = 3;
+    sceneVertexNormalBuffer.numItems = sceneData.vertexNormals.length / 3;
 
-    teapotVertexPositionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, teapotVertexPositionBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(teapotData.vertexPositions), gl.STATIC_DRAW);
-    teapotVertexPositionBuffer.itemSize = 3;
-    teapotVertexPositionBuffer.numItems = teapotData.vertexPositions.length / 3;
+    sceneVertexTextureCoordBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, sceneVertexTextureCoordBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(sceneData.vertexTextureCoords), gl.STATIC_DRAW);
+    sceneVertexTextureCoordBuffer.itemSize = 2;
+    sceneVertexTextureCoordBuffer.numItems = sceneData.vertexTextureCoords.length / 2;
 
-    teapotVertexIndexBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, teapotVertexIndexBuffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(teapotData.indices), gl.STATIC_DRAW);
-    teapotVertexIndexBuffer.itemSize = 1;
-    teapotVertexIndexBuffer.numItems = teapotData.indices.length;
+    sceneVertexPositionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, sceneVertexPositionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(sceneData.vertexPositions), gl.STATIC_DRAW);
+    sceneVertexPositionBuffer.itemSize = 3;
+    sceneVertexPositionBuffer.numItems = sceneData.vertexPositions.length / 3;
+
+    sceneVertexIndexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, sceneVertexIndexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(sceneData.indices), gl.STATIC_DRAW);
+    sceneVertexIndexBuffer.itemSize = 1;
+    sceneVertexIndexBuffer.numItems = sceneData.indices.length;
 
     document.getElementById("loadingtext").textContent = "";
 }
 
 
-function loadTeapot() {
-    alert("entra");
-    //var myAjax = new Ajax.Request( 'duck.dae', { method: 'get', onSuccess: parseXml }); 
+function loadscene() {
+
+    new Ajax.Request('duck.dae', {
+      method: 'get',
+      onSuccess: readCOLLADA        
+    });
 
     var request = new XMLHttpRequest();
     request.open("GET", "Teapot.json");
     request.onreadystatechange = function () {
         if (request.readyState == 4) {
-            handleLoadedTeapot(JSON.parse(request.responseText));
+            handleLoadedScene(JSON.parse(request.responseText));
         }
     }
     request.send();
 
 }
 
-function parseXml(xmlDoc) {
-  var root = xmlDoc.documentElement;
-  //var pri = root.getElementsByTagName('COLLADAf').length;
-  alert(root);
+function readCOLLADA(xml) {
+    var root = xml.responseText;
+    var myDiv = Element.extend(document.createElement("div"));
+    myDiv.innerHTML = root;
+    var geoms = myDiv.getElementsByTagName('geometry');
+
+    // cycle through each geometry
+    for(var g = 0; g < geoms.length; g++) {
+        var meshes = geoms[g].getElementsByTagName('mesh');
+
+        // cycle through each mesh
+        for(var m = 0; m < meshes.length; m++) {
+            var triangles = meshes[m].getElementsByTagName('triangles')[0];
+            var idVertex; // id object in the xml which contains the normals
+            var idNormal; // id object in the xml which contains the normals
+            var idTexcoord; // id object in the xml which contains the texcoords
+            var normals, positions, texcoords; // strings containing the data
+          
+            var inputs = triangles.getElementsByTagName('input');
+            
+            // cycle through each input
+            for(var inp = 0; inp < inputs.length; inp++) {
+                var iactual = inputs[inp];
+                var sourc = iactual.getAttribute('source');
+                var semantic = iactual.getAttribute('semantic');
+
+                if(semantic == 'VERTEX') { idVertex = sourc.replace(/#/g, ''); }
+                if(semantic == 'NORMAL') { idNormal = sourc.replace(/#/g, ''); }
+                if(semantic == 'TEXCOORD') { idTexcoord = sourc.replace(/#/g, ''); }
+
+            }
+
+            var sources = meshes[m].getElementsByTagName('source');
+            
+
+            // cycle through each source
+            for(var s = 0; s < sources.length; s++) {
+                if(sources[s].getAttribute('id') == idNormal) {
+                    var array = sources[s].next();
+                    var count = array.getAttribute('count');
+                    normals = array.innerHTML.replace(/ /g,',');
+                 }
+                else if(sources[s].getAttribute('id') == idTexcoord) {
+                    var array = sources[s].next();
+                    var count = array.getAttribute('count');
+                    texcoords = array.innerHTML.replace(/ /g,',');
+                    alert('texc: ' + texcoords);
+                }
+            }
+            
+            var aNorm = $(idNormal).getElementsByTagName('float_array')[0];
+
+            var cant = aNorm.getAttribute('count');
+            var data = aNorm.innerHTML; alert(data);
+
+            var sceneData = {'vertexNormals': data};
+            
+        }
+    }
 }
 
-
-var teapotAngle = 180;
+var sceneAngle = 180;
 
 
 function drawScene() {
     gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    if (teapotVertexPositionBuffer == null || teapotVertexNormalBuffer == null || teapotVertexTextureCoordBuffer == null || teapotVertexIndexBuffer == null) {
+    if (sceneVertexPositionBuffer == null || sceneVertexNormalBuffer == null || sceneVertexTextureCoordBuffer == null || sceneVertexIndexBuffer == null) {
         return;
     }
 
@@ -273,7 +331,7 @@ function drawScene() {
 
     mat4.translate(mvMatrix, [0, 0, -40]);
     mat4.rotate(mvMatrix, degToRad(23.4), [1, 0, -1]);
-    mat4.rotate(mvMatrix, degToRad(teapotAngle), [0, 1, 0]);
+    mat4.rotate(mvMatrix, degToRad(sceneAngle), [0, 1, 0]);
 
     gl.activeTexture(gl.TEXTURE0);
     if (texture == "earth") {
@@ -285,18 +343,18 @@ function drawScene() {
 
     gl.uniform1f(shaderProgram.materialShininessUniform, parseFloat(document.getElementById("shininess").value));
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, teapotVertexPositionBuffer);
-    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, teapotVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, sceneVertexPositionBuffer);
+    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, sceneVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, teapotVertexTextureCoordBuffer);
-    gl.vertexAttribPointer(shaderProgram.textureCoordAttribute, teapotVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, sceneVertexTextureCoordBuffer);
+    gl.vertexAttribPointer(shaderProgram.textureCoordAttribute, sceneVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, teapotVertexNormalBuffer);
-    gl.vertexAttribPointer(shaderProgram.vertexNormalAttribute, teapotVertexNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, sceneVertexNormalBuffer);
+    gl.vertexAttribPointer(shaderProgram.vertexNormalAttribute, sceneVertexNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, teapotVertexIndexBuffer);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, sceneVertexIndexBuffer);
     setMatrixUniforms();
-    gl.drawElements(gl.TRIANGLES, teapotVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+    gl.drawElements(gl.TRIANGLES, sceneVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 }
 
 
@@ -307,7 +365,7 @@ function animate() {
     if (lastTime != 0) {
         var elapsed = timeNow - lastTime;
 
-        teapotAngle += 0.04 * elapsed;
+        sceneAngle += 0.04 * elapsed;
     }
     lastTime = timeNow;
 }
@@ -325,7 +383,7 @@ function webGLStart() {
     initGL(canvas);
     initShaders();
     initTextures();
-    loadTeapot();
+    loadscene();
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.enable(gl.DEPTH_TEST);
