@@ -184,6 +184,7 @@ function handleLoadedScene(sceneData) {
     sceneVertexPositionBuffer.itemSize = 3;
     sceneVertexPositionBuffer.numItems = sceneData.vertexPositions.length / 3;
 
+
     sceneVertexIndexBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, sceneVertexIndexBuffer);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(sceneData.indices), gl.STATIC_DRAW);
@@ -195,21 +196,10 @@ function handleLoadedScene(sceneData) {
 
 
 function loadscene() {
-
     new Ajax.Request('duck.dae', {
       method: 'get',
       onSuccess: readCOLLADA        
     });
-
-    /*var request = new XMLHttpRequest();
-    request.open("GET", "Teapot.json");
-    request.onreadystatechange = function () {
-        if (request.readyState == 4) {
-            handleLoadedScene(JSON.parse(request.responseText));
-        }
-    }
-    request.send();*/
-
 }
 
 function readCOLLADA(xml) {
@@ -273,13 +263,11 @@ function readCOLLADA(xml) {
                     var array = sources[s].next();
                     ctexcoords = array.getAttribute('count');
                     texcoords = array.innerHTML.split(' ');
-                    //alert('texc: ' + texcoords);
                 }
                 else if(sources[s].getAttribute('id') == idPosition) {
                     var array = sources[s].next();
                     cpositions = array.getAttribute('count');
                     positions = array.innerHTML.split(' ');
-                    //alert('positions: ' + positions);
                 }
             }
             
@@ -288,13 +276,12 @@ function readCOLLADA(xml) {
 
             //var cant = aNorm.getAttribute('count');
             var triangs = aNorm.innerHTML.split(' ');
-            //alert('triangs: '+triangs);
 
-            var fpositions = '', fnormals = '', ftexcoords = '', findexs = '';
+            var fpositions, fnormals, ftexcoords, findexs;
             // final variables
             // we loop over vertices defined by (vertex,normal,texcoord) in 'triangs'
-            for(var i = 0; i < ctriangles; i+=3) {
-                findexs += triangs[i] + ' ';
+            for(var i = 0; i < triangs.length; i+=3) {
+                findexs += i/3 + ' ';
 
                 var iposition = triangs[i];
                 fpositions += positions[iposition*3] + ' ' 
@@ -307,19 +294,14 @@ function readCOLLADA(xml) {
                           + normals[inormal*3+2] + ' ' ;
 
                 var itcoord = triangs[i+2];
-                ftexcoords += texcoords[itcoord*3] + ' '
-                            + texcoords[itcoord*3+1] + ' '
-                            + texcoords[itcoord*3+2] + ' ' ;
+                ftexcoords += texcoords[itcoord*2] + ' '
+                            + texcoords[itcoord*2+1] + ' ' ;
             }
 
-            findexs = findexs.replace(/ /g, ',');
-            fpositions = fpositions.replace(/ /g, ',');
-            fnormals = fnormals.replace(/ /g, ',');
-            ftexcoords = ftexcoords.replace(/ /g, ',');
-
-            var sceneData = {'vertexNormals': fnormals, 'vertexPositions': fpositions, "vertexTextureCoords" : ftexcoords, 'indices': findexs};
-
-            alert(sceneData.vertexPositions);
+            var sceneData = {'vertexNormals': fnormals.trim().split(' '),
+                             'vertexPositions': fpositions.trim().split(' '),
+                             "vertexTextureCoords" : ftexcoords.trim().split(' '),
+                             'indices': findexs.trim().split(' ')};
 
             handleLoadedScene(sceneData);
             
@@ -383,7 +365,7 @@ function drawScene() {
 
     mat4.identity(mvMatrix);
 
-    mat4.translate(mvMatrix, [0, 0, -40]);
+    mat4.translate(mvMatrix, [0, 0, -100]);
     mat4.rotate(mvMatrix, degToRad(23.4), [1, 0, -1]);
     mat4.rotate(mvMatrix, degToRad(sceneAngle), [0, 1, 0]);
 
